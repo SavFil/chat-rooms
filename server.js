@@ -1,8 +1,10 @@
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const mime = require('mime');
+const mime = require('mime-types');
 const cache = {};
+
+
 
 function send404(response) {
     response.writeHead(404, { 'Content-Type': 'text/plain' });
@@ -19,9 +21,9 @@ function serveStatic(response, cache, absPath) {
     if (cache[absPath]) {
         sendFile(response, absPath, cache[absPath]);
     } else {
-        fs.exist(absPath, (exists) => {
+        fs.exists(absPath, (exists) => {
             if (exists) {
-                fs.readFile(absPath, (err, data)=>{
+                fs.readFile(absPath, (err, data) => {
                     if (err) {
                         send404(response);
                     } else {
@@ -32,6 +34,22 @@ function serveStatic(response, cache, absPath) {
             }
         });
     }
-    
+
 
 }
+
+const server = http.createServer((request, response) => {
+    let filePath = false;
+
+    if (request.url == '/') {
+        filePath = 'public/index.html';
+    } else {
+        filePath = `public${request.url}`;
+    }
+    let absPath = `./${filePath}`;
+    serveStatic(response, cache, absPath);
+});
+
+server.listen(3000, () => {
+    console.log("Server listening on port 3000.")
+});
